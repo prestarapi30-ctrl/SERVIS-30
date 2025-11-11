@@ -74,8 +74,8 @@ export default function Dashboard() {
           </select>
         </div>
         <div style={{ marginBottom: 10 }}>
-          <label className="label">Monto (mínimo S/ 20)</label>
-          <input className="input" type="number" min={20} value={amount} onChange={(e) => setAmount(Number(e.target.value || 0))} />
+          <label className="label">{method === 'USDT' ? 'Monto (mínimo $ 10)' : 'Monto (mínimo S/ 20)'}</label>
+          <input className="input" type="number" min={method === 'USDT' ? 10 : 20} value={amount} onChange={(e) => setAmount(Number(e.target.value || 0))} />
         </div>
         <div style={{ marginBottom: 12 }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -87,7 +87,8 @@ export default function Dashboard() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button className="btn" disabled={!confirmed} onClick={async () => {
             try {
-              if (amount < 20) return alert('El monto mínimo es S/ 20');
+              const minAllowed = method === 'USDT' ? 10 : 20;
+              if (amount < minAllowed) return alert(`El monto mínimo es ${method === 'USDT' ? '$ 10' : 'S/ 20'}`);
               const token = localStorage.getItem('token');
               if (!token) {
                 alert('Debes iniciar sesión.');
