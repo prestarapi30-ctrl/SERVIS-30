@@ -4,6 +4,7 @@ export default function Sidebar() {
       <div className="title" style={{ marginBottom: 10 }}>Panel</div>
       <a className="item" href="/">Inicio</a>
       <a className="item" href="/dashboard">Dashboard</a>
+      <a className="item" href="/perfil">Perfil</a>
       <div className="muted" style={{ margin: '10px 0' }}>Servicios</div>
       <a className="item" href="/servicios/taxi">Taxi</a>
       <a className="item" href="/servicios/vuelos-bus">Vuelos/Bus</a>

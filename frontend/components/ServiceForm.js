@@ -79,6 +79,10 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
   const [form, setForm] = useState(() => Object.fromEntries((cfg.fields || []).map(f => [f.name, ''])));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [result, setResult] = useState(null);
+  const [me, setMe] = useState(null);
+  const [rechargeOpen, setRechargeOpen] = useState(false);
+  const [rechargeMethod, setRechargeMethod] = useState('YAPE');
+  const [rechargeAmount, setRechargeAmount] = useState(20);
 
   useEffect(() => {
     // Reset form when serviceKey changes
@@ -111,6 +115,28 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
       }, { headers: { Authorization: `Bearer ${token}` } });
       setResult(r.data);
       setConfirmOpen(false);
+    } catch (e) {
+      alert(e.response?.data?.error || e.message);
+    }
+  }
+
+  async function onConfirmClick() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Debes iniciar sesión para generar una orden.');
+      window.location.href = '/login';
+      return;
+    }
+    try {
+      const { final } = calc();
+      const r = await axios.get(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+      setMe(r.data);
+      if (Number(r.data.balance) < Number(final)) {
+        setRechargeAmount(Math.max(20, Number(final) - Number(r.data.balance)));
+        setRechargeOpen(true);
+        return;
+      }
+      setConfirmOpen(true);
     } catch (e) {
       alert(e.response?.data?.error || e.message);
     }
@@ -158,13 +184,37 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
         <div className="card">Final: <strong>S/ {final}</strong></div>
       </div>
       <div style={{ marginTop: 14 }}>
-        <button className="btn secondary" onClick={() => setConfirmOpen(true)}>Confirmar</button>
+        <button className="btn secondary" onClick={onConfirmClick}>Confirmar</button>
       </div>
 
       <Modal open={confirmOpen} title="Confirmar orden" onClose={() => setConfirmOpen(false)}>
         <p>Se creará la orden por <strong>S/ {final}</strong>.</p>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
           <button className="btn" onClick={createOrder}>Crear orden</button>
+        </div>
+      </Modal>
+
+      {/* Modal de recarga cuando saldo insuficiente */}
+      <Modal open={rechargeOpen} title="Saldo insuficiente" onClose={() => setRechargeOpen(false)}>
+        <p>Tu saldo actual es <strong>S/ {me?.balance ?? 0}</strong> y el monto final es <strong>S/ {final}</strong>.</p>
+        <p>Por favor, recarga al menos <strong>S/ {Math.max(20, Number(final) - Number(me?.balance || 0))}</strong>.</p>
+        <div style={{ marginTop: 10 }}>
+          <label className="label">Método de pago</label>
+          <select className="input" value={rechargeMethod} onChange={(e) => setRechargeMethod(e.target.value)}>
+            <option>YAPE</option>
+            <option>EFECTIVO</option>
+            <option>USDT</option>
+          </select>
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <label className="label">Monto a recargar (mínimo S/ 20)</label>
+          <input className="input" type="number" min={20} value={rechargeAmount} onChange={(e) => setRechargeAmount(Number(e.target.value || 0))} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+          <button className="btn" onClick={() => {
+            const payload = `${rechargeMethod}_${Math.max(20, rechargeAmount)}_${me?.token_saldo}`;
+            window.open(`https://t.me/PAGASEGUROBOT?start=${encodeURIComponent(payload)}`, '_blank');
+          }}>Recargar en Telegram</button>
         </div>
       </Modal>
 
