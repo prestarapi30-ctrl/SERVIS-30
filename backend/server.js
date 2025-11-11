@@ -51,7 +51,7 @@ app.post('/api/admin/login', async (req, res) => {
 
 // Current user
 app.get('/api/users/me', authMiddleware, async (req, res) => {
-  const r = await query('SELECT id, name, email, role, token_saldo, balance FROM users WHERE id=$1', [req.user.sub]);
+  const r = await query('SELECT id, name, email, role, token_saldo, balance, phone FROM users WHERE id=$1', [req.user.sub]);
   res.json(r.rows[0]);
 });
 
