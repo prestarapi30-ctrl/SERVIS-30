@@ -65,7 +65,7 @@ bot.onText(/\/start(?:\s+(.*))?/, async (msg, match) => {
         ]
       }
     });
-    await notifyAdminNewRecharge({ userChatId: chatId, method, amount, token: token_saldo });
+    // Evitar doble notificación al admin: se notificará solo después de que el usuario confirme.
   } catch (e) {
     bot.sendMessage(chatId, `No se pudo verificar la solicitud. Debes iniciar desde el Panel. (${e.response?.data?.error || e.message})`);
   }
@@ -83,6 +83,71 @@ bot.on('callback_query', async (q) => {
     bot.answerCallbackQuery(q.id, { text: 'Ok, cancelo.' });
     sessions.delete(chatId);
     bot.sendMessage(chatId, 'Solicitud cancelada. Puedes iniciar de nuevo con /start.');
+  }
+});
+
+// Utilidades para asociar token -> chat del usuario activo
+function getUserChatIdByToken(token) {
+  const entry = [...sessions.entries()].find(([, v]) => v.token === token);
+  return entry ? entry[0] : null;
+}
+
+// Estado de espera: QR del admin para un token
+const adminPendingQR = new Map(); // key: adminChatId, value: { token }
+
+// Comando admin: /QR <token> (el admin enviará la foto del QR inmediatamente después)
+bot.onText(/\/QR\s+(\S+)/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  if (String(chatId) !== String(ADMIN_CHAT)) {
+    return bot.sendMessage(chatId, 'Este comando es solo para admin.');
+  }
+  const token = match[1];
+  const userChatId = getUserChatIdByToken(token);
+  if (!userChatId) {
+    return bot.sendMessage(chatId, 'No encuentro al usuario activo para ese token. Asegúrate que haya confirmado la recarga.');
+  }
+  adminPendingQR.set(chatId, { token });
+  bot.sendMessage(chatId, 'Ok. Envía ahora el QR como foto (no documento).');
+});
+
+// Comando admin: /NU <token> <numero> (envía número al usuario)
+bot.onText(/\/NU\s+(\S+)\s+(\S+)/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  if (String(chatId) !== String(ADMIN_CHAT)) {
+    return bot.sendMessage(chatId, 'Este comando es solo para admin.');
+  }
+  const token = match[1];
+  const numero = match[2];
+  const userChatId = getUserChatIdByToken(token);
+  if (!userChatId) {
+    return bot.sendMessage(chatId, 'No encuentro al usuario activo para ese token.');
+  }
+  const s = sessions.get(userChatId);
+  const amountTxt = s?.amount ? `S/ ${s.amount}` : '';
+  await bot.sendMessage(userChatId, `Medio de pago: Número ${numero}. Envía ${amountTxt} y adjunta tu comprobante.`);
+  if (s) sessions.set(userChatId, { ...s, status: 'awaiting_receipt' });
+  bot.sendMessage(chatId, 'Número enviado al usuario.');
+});
+
+// Foto enviada por admin para QR
+bot.on('photo', async (msg) => {
+  if (String(msg.chat.id) === String(ADMIN_CHAT)) {
+    const pending = adminPendingQR.get(msg.chat.id);
+    if (!pending) return; // no estamos esperando QR
+    const token = pending.token;
+    const userChatId = getUserChatIdByToken(token);
+    if (!userChatId) {
+      adminPendingQR.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id, 'Usuario no activo para ese token.');
+    }
+    const s = sessions.get(userChatId);
+    const photo = msg.photo[msg.photo.length - 1];
+    const fileId = photo.file_id;
+    const caption = s?.amount ? `Medio de pago: QR. Envía S/ ${s.amount} y adjunta tu comprobante.` : 'Medio de pago: QR. Adjunta tu comprobante tras pagar.';
+    await bot.sendPhoto(userChatId, fileId, { caption });
+    if (s) sessions.set(userChatId, { ...s, status: 'awaiting_receipt' });
+    adminPendingQR.delete(msg.chat.id);
+    return bot.sendMessage(msg.chat.id, 'QR enviado al usuario.');
   }
 });
 
