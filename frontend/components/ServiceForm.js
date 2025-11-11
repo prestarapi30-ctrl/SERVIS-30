@@ -254,9 +254,9 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
         <div style={{ marginTop: 10 }}>
           <label className="label">Método de pago</label>
           <select className="input" value={rechargeMethod} onChange={(e) => setRechargeMethod(e.target.value)}>
-            <option>YAPE</option>
-            <option>PAGO EFECTIVO</option>
-            <option>USDT</option>
+            <option value="YAPE">YAPE</option>
+            <option value="EFECTIVO">PAGO EFECTIVO</option>
+            <option value="USDT">USDT</option>
           </select>
         </div>
         <div style={{ marginTop: 10 }}>
