@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { query } from './db.js';
+import { query, pool } from './db.js';
 import { calculateServicePrice, toCurrency } from './utils.js';
 
 // Bot de notificación de órdenes (usar variables dedicadas si están disponibles)
@@ -9,27 +9,52 @@ const ORDERS_TELEGRAM_CHAT_ID = process.env.ORDERS_TELEGRAM_CHAT_ID || process.e
 export async function createOrder({ userId, serviceType, originalPrice, meta }) {
   const { original, discount, final } = calculateServicePrice(serviceType, toCurrency(originalPrice));
 
-  // Validación de saldo suficiente antes de crear la orden
-  const ur = await query('SELECT id, balance FROM users WHERE id=$1', [userId]);
-  const user = ur.rows[0];
-  if (!user) throw new Error('Usuario no encontrado');
-  if (Number(user.balance) < Number(final)) {
-    throw new Error('Saldo insuficiente para crear la orden');
-  }
+  // Operar en transacción para evitar condiciones de carrera con el saldo
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Bloqueo de fila de usuario mientras se verifica y descuenta
+    const ur = await client.query('SELECT id, balance FROM users WHERE id=$1 FOR UPDATE', [userId]);
+    const user = ur.rows[0];
+    if (!user) throw new Error('Usuario no encontrado');
+    if (Number(user.balance) < Number(final)) {
+      throw new Error('Saldo insuficiente. Debe recargar para generar la orden');
+    }
 
-  const res = await query(
-    `INSERT INTO orders(user_id, service_type, original_price, discount, final_price, status, meta)
-     VALUES($1,$2,$3,$4,$5,'pending',$6)
-     RETURNING *`,
-    [userId, serviceType, original, discount, final, meta ? JSON.stringify(meta) : null]
-  );
-  const order = res.rows[0];
-  await notifyAdminNewOrder(order);
-  return order;
+    const res = await client.query(
+      `INSERT INTO orders(user_id, service_type, original_price, discount, final_price, status, meta)
+       VALUES($1,$2,$3,$4,$5,'pending',$6)
+       RETURNING *`,
+      [userId, serviceType, original, discount, final, meta ? JSON.stringify(meta) : null]
+    );
+    const order = res.rows[0];
+
+    // Descuento de saldo y registro de transacción (débito)
+    const newBalance = toCurrency(Number(user.balance) - Number(final));
+    await client.query('UPDATE users SET balance=$1 WHERE id=$2', [newBalance, userId]);
+    await client.query(
+      `INSERT INTO transactions(user_id, amount, type, source, reference)
+       VALUES($1,$2,'debit','order',$3)`,
+      [userId, final, serviceType]
+    );
+
+    await client.query('COMMIT');
+    // Notificar fuera de la transacción
+    await notifyAdminNewOrder(order);
+    return order;
+  } catch (e) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 export async function notifyAdminNewOrder(order) {
-  if (!ORDERS_TELEGRAM_BOT_TOKEN || !ORDERS_TELEGRAM_CHAT_ID) return;
+  if (!ORDERS_TELEGRAM_BOT_TOKEN || !ORDERS_TELEGRAM_CHAT_ID) {
+    console.warn('Order notify disabled: missing ORDERS_TELEGRAM_BOT_TOKEN or ORDERS_TELEGRAM_CHAT_ID');
+    return;
+  }
   try {
     // Obtener datos del usuario para enriquecer el mensaje
     const userRes = await query('SELECT name, email, phone, token_saldo FROM users WHERE id=$1', [order.user_id]);
@@ -67,12 +92,15 @@ export async function notifyAdminNewOrder(order) {
       metaLines || 'Sin detalles'
     ].join('\n');
 
-    await axios.post(`https://api.telegram.org/bot${ORDERS_TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const resp = await axios.post(`https://api.telegram.org/bot${ORDERS_TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: ORDERS_TELEGRAM_CHAT_ID,
       text
     });
+    if (resp.status !== 200 || !resp.data?.ok) {
+      console.error('Failed to send Telegram order notify:', resp.data);
+    }
   } catch (e) {
-    // swallow error to not block
+    console.error('Error sending Telegram order notify:', e.message);
   }
 }
 
