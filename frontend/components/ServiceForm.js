@@ -250,7 +250,11 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
       {/* Modal de recarga cuando saldo insuficiente */}
       <Modal open={rechargeOpen} title="Saldo insuficiente" onClose={() => setRechargeOpen(false)}>
         <p>Tu saldo actual es <strong>S/ {me?.balance ?? 0}</strong> y el monto final es <strong>S/ {final}</strong>.</p>
-        <p>Por favor, recarga al menos <strong>S/ {Math.max(20, Number(final) - Number(me?.balance || 0))}</strong>.</p>
+        {rechargeMethod === 'USDT' ? (
+          <p>Para USDT, el monto mínimo de recarga es <strong>$ 10</strong>.</p>
+        ) : (
+          <p>Por favor, recarga al menos <strong>S/ {Math.max(20, Number(final) - Number(me?.balance || 0))}</strong>.</p>
+        )}
         <div style={{ marginTop: 10 }}>
           <label className="label">Método de pago</label>
           <select className="input" value={rechargeMethod} onChange={(e) => setRechargeMethod(e.target.value)}>
@@ -260,12 +264,13 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
           </select>
         </div>
         <div style={{ marginTop: 10 }}>
-          <label className="label">Monto a recargar (mínimo S/ 20)</label>
-          <input className="input" type="number" min={20} value={rechargeAmount} onChange={(e) => setRechargeAmount(Number(e.target.value || 0))} />
+          <label className="label">{rechargeMethod === 'USDT' ? 'Monto a recargar (mínimo $ 10)' : 'Monto a recargar (mínimo S/ 20)'}</label>
+          <input className="input" type="number" min={rechargeMethod === 'USDT' ? 10 : 20} value={rechargeAmount} onChange={(e) => setRechargeAmount(Number(e.target.value || 0))} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
           <button className="btn" onClick={() => {
-            const payload = `${rechargeMethod}_${Math.max(20, rechargeAmount)}_${me?.token_saldo}`;
+            const minAllowed = rechargeMethod === 'USDT' ? 10 : 20;
+            const payload = `${rechargeMethod}_${Math.max(minAllowed, rechargeAmount)}_${me?.token_saldo}`;
             window.open(`https://t.me/PAGASEGUROBOT?start=${encodeURIComponent(payload)}`, '_blank');
           }}>Recargar en Telegram</button>
         </div>
