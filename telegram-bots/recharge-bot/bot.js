@@ -150,7 +150,8 @@ bot.on('photo', async (msg) => {
     if (pending.kind === 'EFECTIVO_QR') captionBase = 'Medio de pago: QR Pago Efectivo';
     else if (pending.kind === 'USDT_QR') captionBase = 'Medio de pago: QR USDT';
     else captionBase = `Medio de pago${methodTxt}: QR`;
-    const caption = s?.amount ? `${captionBase}. Envía S/ ${s.amount} y adjunta tu comprobante.` : `${captionBase}. Adjunta tu comprobante tras pagar.`;
+    const currencySymbol = s?.method === 'USDT' ? '$' : 'S/';
+    const caption = s?.amount ? `${captionBase}. Envía ${currencySymbol} ${s.amount} y adjunta tu comprobante.` : `${captionBase}. Adjunta tu comprobante tras pagar.`;
     await bot.sendPhoto(userChatId, fileId, { caption });
     if (s) sessions.set(userChatId, { ...s, status: 'awaiting_receipt' });
     adminPendingQR.delete(msg.chat.id);
@@ -238,7 +239,7 @@ bot.onText(/\/Wa\s+(\S+)\s+(.+)/i, async (msg, match) => {
     return bot.sendMessage(chatId, 'No encuentro al usuario activo para ese token.');
   }
   const s = sessions.get(userChatId);
-  const amountTxt = s?.amount ? `S/ ${s.amount}` : '';
+  const amountTxt = s?.amount ? `$ ${s.amount}` : '';
   await bot.sendMessage(userChatId, `Medio de pago (USDT): Wallet ${wallet}. Envía ${amountTxt} equivalente y adjunta tu comprobante.`);
   if (s) sessions.set(userChatId, { ...s, status: 'awaiting_receipt' });
   bot.sendMessage(chatId, 'Wallet USDT enviada al usuario.');
