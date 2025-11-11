@@ -3,10 +3,10 @@ import Layout from '../components/Layout';
 export default function Home() {
   return (
     <Layout>
-      {/* Hero simplificado: solo un botón de servicios */}
+      {/* Hero renovado con confianza y reseñas */}
       <div className="panel hero" style={{ marginBottom: 22 }}>
         <div>
-          <div className="title">SERVIS-30 — moderno, confiable y con ahorro automático</div>
+          <div className="title gradient">SERVIS-30 — moderno, confiable y con ahorro automático</div>
           <p className="subtitle">Aprovecha el 30% de descuento en la mayoría de servicios. Transparencia, soporte y atención rápida para que no te compliques.</p>
           <div className="cta-group" style={{ marginTop: 14 }}>
             {typeof window !== 'undefined' && localStorage.getItem('token') ? (
@@ -18,11 +18,15 @@ export default function Home() {
               </>
             )}
           </div>
-          {/* Botón de servicios removido según indicación */}
-          <div className="trust">
-            <span className="badge">Seguro</span>
-            <span className="badge">Descuento 30%</span>
-            <span className="badge">Atención 24/7</span>
+          <div className="rating" style={{ marginTop: 10 }}>
+            <span className="stars">★★★★★</span>
+            <span className="muted">4.9/5 satisfacción • Usuarios verificados</span>
+          </div>
+          <div className="trust" style={{ marginTop: 10 }}>
+            <span className="badge glow">Pago seguro</span>
+            <span className="badge glow">Descuento 30%</span>
+            <span className="badge glow">Soporte 24/7</span>
+            <span className="badge glow">Técnicos verificados</span>
           </div>
         </div>
         <div>
@@ -31,6 +35,19 @@ export default function Home() {
             <div className="stat"><div className="muted">Órdenes</div><div style={{ fontSize: 22, fontWeight: 800 }}>+500</div></div>
             <div className="stat"><div className="muted">Ahorro</div><div style={{ fontSize: 22, fontWeight: 800 }}>30%</div></div>
           </div>
+        </div>
+      </div>
+
+      {/* Marquesina CTA llamativa */}
+      <div className="panel marquee marquee-cta" style={{ marginBottom: 22 }}>
+        <div className="marquee-track">
+          {/* Secuencia duplicada para loop sin espacios */}
+          <span className="marquee-banner">NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
+          <span className="marquee-banner">NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
+          <span className="marquee-banner">NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
+          <span className="marquee-banner" aria-hidden>NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
+          <span className="marquee-banner" aria-hidden>NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
+          <span className="marquee-banner" aria-hidden>NO TE QUEDES CON LAS GANAS DE PAGAR MENOS, ¡APROVECHA YA!</span>
         </div>
       </div>
 
