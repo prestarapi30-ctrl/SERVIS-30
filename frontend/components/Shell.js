@@ -26,7 +26,7 @@ export default function Shell({ children }) {
     <div>
       <nav className="nav">
         <div className="logo">
-          <img src="/LOGO.svg" alt="SERVIS-30" width={28} height={28} />
+          <img src="/logo.svg" alt="SERVIS-30" width={28} height={28} />
           <strong style={{ fontSize: 18 }}>SERVIS-30</strong>
           <span className="pill">Panel</span>
         </div>
