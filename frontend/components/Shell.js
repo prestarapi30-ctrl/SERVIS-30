@@ -55,6 +55,18 @@ export default function Shell({ children }) {
           {children}
         </div>
       </main>
+      <footer className="container" style={{ marginTop: 24 }}>
+        <div className="panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <div className="title" style={{ fontSize: 18 }}>Contacto</div>
+            <div className="muted">Soporte y asistencia del panel disponibles.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <a className="pill link" href="https://t.me/Servis30z" target="_blank" rel="noopener noreferrer">Telegram: @Servis30z</a>
+            <a className="pill link" href="mailto:contactrecia24@gmail.com">Correo: contactrecia24@gmail.com</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
