@@ -176,7 +176,11 @@ app.post('/api/recharge/intents', authMiddleware, async (req, res) => {
     const { method, amount } = req.body;
     const amt = Number(amount);
     if (!allowed.includes(String(method).toUpperCase())) return res.status(400).json({ error: 'Método inválido' });
-    if (!amt || amt < 20) return res.status(400).json({ error: 'El monto mínimo es S/ 20' });
+    const upperMethod = String(method).toUpperCase();
+    const minByMethod = upperMethod === 'USDT' ? 10 : 20;
+    if (!amt || amt < minByMethod) {
+      return res.status(400).json({ error: upperMethod === 'USDT' ? 'El monto mínimo es $ 10' : 'El monto mínimo es S/ 20' });
+    }
     const ur = await query('SELECT id, token_saldo FROM users WHERE id=$1', [req.user.sub]);
     const user = ur.rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
