@@ -1,18 +1,22 @@
 # SERVIS-30
 
-Proyecto fullstack con arquitectura moderna tipo dashboard/panel, listo para desplegar en Render y subir a GitHub. Incluye:
+Proyecto fullstack con backend Node.js/Express + PostgreSQL, frontend Next.js y bots de Telegram, listo para desplegar en Render y subir a GitHub.
 
-- Backend: Node.js + Express + PostgreSQL (Render Managed DB)
-- Frontend: Next.js 14 (modo pages)
-- Bot de Telegram para notificación y recarga de saldo
+- Backend: API REST con autenticación y gestión de órdenes/transacciones.
+- Frontend: Dashboard en Next.js (pages router).
+- Bots: `recharge-bot` (recarga de saldo) y opcional `order-notifier` (validación y utilidades). 
+
+Para detalles de despliegue paso a paso, consulta también `DEPLOY/README.md` y los `.env.example` en `DEPLOY/env/`.
 
 ## Estructura
 
 ```
 SERVIS-30/
+  .gitignore
   backend/
     server.js
     package.json
+    package-lock.json
     .env.example
     sql_init.sql
     src/
@@ -22,6 +26,7 @@ SERVIS-30/
       utils.js
   frontend/
     package.json
+    package-lock.json
     next.config.js
     .env.example
     pages/
@@ -52,128 +57,111 @@ SERVIS-30/
       global.css
     public/
       logo.svg
-  telegram-bot/
-    bot.js
-    package.json
-    .env.example
+  telegram-bots/
+    recharge-bot/
+      bot.js
+      package.json
+      package-lock.json
+    order-notifier/ (opcional)
+      bot.js
+      package.json
+      package-lock.json
 ```
+
+Nota: Puede existir un directorio legado `telegram-bot/` con un bot único; la estructura recomendada es `telegram-bots/` con bots separados.
 
 ## Variables de entorno
 
-### Backend — `.env`
+Usa los `.env.example` incluidos y NO subas tus `.env` reales al repositorio.
 
-```
-DATABASE_URL=postgresql://servis30db_user:nMU4NdRf3xKeVrsnnWz5gNAcFX37qF9b@dpg-d456dg49c44c7382afr0-a.oregon-postgres.render.com/servis30db
-JWT_SECRET=SJDSDNCXOW390230S
-BOT_API_KEY=SERVIS2HDSDASDW2J
-TELEGRAM_BOT_TOKEN=8560466193:AAGIYA99tuJwqgHbkMGxaO0G8tYiHpG0d2c
-TELEGRAM_CHAT_ID=7389150688
-CORS_ORIGIN=`https://tumanzanita.store`
-```
+- Backend (`backend/.env.example`):
+  - `DATABASE_URL` — cadena de conexión PostgreSQL (Render External Connection String).
+  - `JWT_SECRET` — secreto para firmar tokens.
+  - `BOT_API_KEY` — clave compartida para validar llamadas del bot.
+  - `ORDERS_TELEGRAM_BOT_TOKEN` (opcional) — token de bot para notificaciones de órdenes.
+  - `ORDERS_TELEGRAM_CHAT_ID` (opcional) — chat destino de las notificaciones.
+  - `CORS_ORIGIN` — origin permitido del frontend (ej. `https://tu-dominio.com`).
 
-### Frontend — `.env`
+- Frontend (`frontend/.env.example`):
+  - `NEXT_PUBLIC_API_URL` — URL pública del backend (ej. `https://backend.onrender.com`).
 
-```
-NEXT_PUBLIC_API_URL=`https://servis-30-backend.onrender.com`
-NEXT_PUBLIC_SITE_URL=`https://tumanzanita.store`
-```
+- Recharge Bot (`DEPLOY/env/recharge-bot.env.example`):
+  - `RECHARGE_TELEGRAM_BOT_TOKEN` — token del bot de recarga.
+  - `TELEGRAM_ADMIN_CHAT_ID` — chat del admin para revisiones.
+  - `BACKEND_URL` — URL del backend (misma que arriba).
+  - `BOT_API_KEY` — debe coincidir con el del backend.
+  - Opcionales de pago: `PAYMENT_YAPE_QR_URL`, `PAYMENT_YAPE_PHONE`, `PAYMENT_EFECTIVO_INSTRUCTIONS`, `PAYMENT_USDT_WALLET`, `PAYMENT_USDT_NETWORK`.
 
-### Telegram Bot — `.env`
-
-```
-BOT_API_KEY=SERVIS2HDSDASDW2J
-BACKEND_URL=`https://servis-30-backend.onrender.com`
-TELEGRAM_BOT_TOKEN=8560466193:AAGIYA99tuJwqgHbkMGxaO0G8tYiHpG0d2c
-```
+- Order Notifier (opcional) (`DEPLOY/env/order-notifier.env.example`):
+  - `ORDERS_TELEGRAM_BOT_TOKEN` — token del bot de órdenes.
 
 ## Base de datos
 
-Usa `backend/sql_init.sql` para crear todas las tablas y triggers:
+Usa `backend/sql_init.sql` para crear tablas y triggers:
 
-- `users`
-- `orders`
-- `transactions`
-- `admin_users`
-- `logs`
+- `users`, `orders`, `transactions`, `admin_users`, `logs`.
 
-### Inicialización en Render
+Inicialización:
 
-1. Crea una Base de Datos PostgreSQL en Render (Managed DB).
-2. Entra al panel de la DB y abre el apartado de “Data” o “SQL shell”.
-3. Copia y ejecuta el contenido de `backend/sql_init.sql`.
+- Render (recomendado): crea DB PostgreSQL, copia la `External Connection String` y ejecuta `sql_init.sql` desde la consola de SQL o un “One-off Job”.
+- Local: `psql "<DATABASE_URL>" -f backend/sql_init.sql`.
 
-## Backend (Render Web Service)
+## Despliegue en Render
 
-- Build command: `npm install`
-- Start command: `node server.js`
-- Root: `backend/`
-- Env vars: las descritas arriba.
+- Backend (Web Service):
+  - Root: `SERVIS-30/backend`
+  - Build: `npm install`
+  - Start: `node server.js`
+  - Env: `DATABASE_URL`, `JWT_SECRET`, `BOT_API_KEY`, `CORS_ORIGIN`, opcional `ORDERS_TELEGRAM_*`, y (si lo usas) `BACKEND_URL` para enlaces internos.
 
-## Frontend (Render Static Site o Web Service)
+- Frontend (Web Service):
+  - Root: `SERVIS-30/frontend`
+  - Build: `npm install && npm run build`
+  - Start: `npm run start`
+  - Env: `NEXT_PUBLIC_API_URL` apuntando al backend.
 
-- Si usas Static Site:
-  - Build command: `npm install && npm run build`
-  - Publish directory: `.next`
-  - Root: `frontend/`
-- Si usas Web Service (SSR):
-  - Build command: `npm install && npm run build`
-  - Start command: `npm run start`
-  - Root: `frontend/`
+- Recharge Bot (Worker):
+  - Root: `SERVIS-30/telegram-bots/recharge-bot`
+  - Build: `npm install`
+  - Start: `node bot.js`
+  - Env: como en la sección de bots.
 
-## Bot (Render Worker)
+- Order Notifier (Worker, opcional):
+  - Root: `SERVIS-30/telegram-bots/order-notifier`
+  - Build: `npm install`
+  - Start: `node bot.js`
+  - Env: `ORDERS_TELEGRAM_BOT_TOKEN`.
 
-- Start command: `node bot.js`
-- Root: `telegram-bot/`
-- Env vars: las descritas arriba.
+Para una guía detallada y checklist de variables, revisa `DEPLOY/README.md`.
 
-## Deploy: Pasos (Render + GitHub)
+## Conexión Frontend ↔ Backend y CORS
 
-1. Crear repositorio en GitHub y subir este proyecto:
-   - En la raíz `SERVIS-30/`:
-     - `git init`
-     - `git add .`
-     - `git commit -m "SERVIS-30 initial"`
-     - `git branch -M main`
-     - `git remote add origin <tu_repo_url>`
-     - `git push -u origin main`
+- El frontend consume `NEXT_PUBLIC_API_URL`.
+- Configura `CORS_ORIGIN` con el dominio del frontend.
 
-2. Render: Crear servicios
-   - Backend: Web Service apuntando a `SERVIS-30/backend`
-   - Frontend: Static Site o Web Service apuntando a `SERVIS-30/frontend`
-   - DB: PostgreSQL Managed DB
-   - Bot: Worker apuntando a `SERVIS-30/telegram-bot`
+## Flujo de recarga y notificaciones
 
-3. Configurar variables de entorno en cada servicio (copiar desde `.env.example`).
+- En Dashboard, el botón “Recargar saldo” abre el modal.
+- “Cancelar” cierra el modal. “Confirmar” valida, crea el intent y abre el bot.
+- El backend notifica nuevas órdenes usando `ORDERS_TELEGRAM_BOT_TOKEN` + `ORDERS_TELEGRAM_CHAT_ID` si están configurados.
 
-4. Dominio GoDaddy (`tumanzanita.store`):
-   - En Render, en el servicio del frontend, añade el dominio personalizado.
-   - Render te indicará los registros a añadir en GoDaddy:
-     - Añadir CNAME hacia el subdominio gestionado por Render (por ejemplo `www` -> `yourapp.onrender.com`).
-     - Añadir A records si Render lo solicita para raíz/apex (opcional, depende de configuración).
-   - Activar SSL desde Render (se emite automáticamente con Let’s Encrypt al validar DNS).
-
-## Conexión Frontend-Backend
-
-- El frontend usa `process.env.NEXT_PUBLIC_API_URL` para conectarse al backend.
-- Asegúrate de que CORS esté configurado con el origin correcto en el backend.
-
-## Servicios y descuentos
-
-- Todos los servicios aplican descuento automático del 30% excepto `cambio de notas` (precio fijo 350).
-- Endpoints disponibles en `/api/services/*` y CRUD de órdenes en `/api/orders`.
-
-## Notificaciones y recarga vía Telegram
-
-- Bot con comandos:
-  - `/start`
-  - `/recargar {user_token} {monto}`
-  - `/saldo {user_token}`
-- El bot comunica con el backend usando `BACKEND_URL/api/bot/recarga`.
+Nota: el username del bot de recarga está actualmente hardcodeado en `frontend/pages/dashboard.js`. Si cambias de bot, actualiza el username allí o conviértelo a `NEXT_PUBLIC_RECHARGE_BOT_USERNAME`.
 
 ## Desarrollo local
 
-1. Backend: `cd backend && npm install && node server.js`
-2. Frontend: `cd frontend && npm install && npm run dev`
-3. Bot: `cd telegram-bot && npm install && node bot.js`
+- Backend: `cd backend && npm install && node server.js`
+- Frontend: `cd frontend && npm install && npm run dev`
+- Recharge Bot: `cd telegram-bots/recharge-bot && npm install && node bot.js`
+- Order Notifier (opcional): `cd telegram-bots/order-notifier && npm install && node bot.js`
 
-> Nota: Para ambientes productivos, usa variables reales (sin backticks). Los `.env.example` incluyen backticks porque así se solicitó; el código del backend normaliza el origin eliminando comillas/backticks.
+## GitHub y `.gitignore`
+
+- Ya existe `.gitignore` para excluir `node_modules`, `.next`, `out`, `.env`, logs y cachés.
+- Sube código fuente, `package.json`, `package-lock.json`, `backend/sql_init.sql` y el folder `DEPLOY/`.
+- No subas `node_modules` ni `.env` reales.
+
+## Dominios y SSL
+
+- Añade tu dominio en el servicio del frontend en Render.
+- Render provee los registros DNS (CNAME/A) para configurar en tu proveedor (GoDaddy, etc.).
+- SSL se emite automáticamente tras validar DNS.
