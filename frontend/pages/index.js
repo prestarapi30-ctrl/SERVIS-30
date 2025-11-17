@@ -1,13 +1,34 @@
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import Layout from '../components/Layout';
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Home() {
+  const [settings, setSettings] = useState({ global_discount_percent: 30, fixed_price_cambio_notas: 350 });
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const r = await axios.get(`${API}/api/settings`);
+        setSettings({
+          global_discount_percent: Number(r.data?.global_discount_percent ?? 30),
+          fixed_price_cambio_notas: Number(r.data?.fixed_price_cambio_notas ?? 350)
+        });
+      } catch (e) {
+        console.warn('No se pudieron cargar settings públicos:', e.response?.data?.error || e.message);
+      }
+    }
+    loadSettings();
+  }, []);
+  const discountPercent = Number(settings.global_discount_percent || 30);
+  const fixedCambioNotas = Number(settings.fixed_price_cambio_notas || 350);
   return (
     <Layout>
       {/* Hero renovado con confianza y reseñas */}
       <div className="panel hero" style={{ marginBottom: 22 }}>
         <div>
           <div className="title gradient">SERVIS-30 — moderno, confiable y con ahorro automático</div>
-          <p className="subtitle">Aprovecha el 30% de descuento en la mayoría de servicios. Transparencia, soporte y atención rápida para que no te compliques.</p>
+          <p className="subtitle">Aprovecha el {discountPercent}% de descuento en la mayoría de servicios. Transparencia, soporte y atención rápida para que no te compliques.</p>
           <div className="cta-group" style={{ marginTop: 14 }}>
             {typeof window !== 'undefined' && localStorage.getItem('token') ? (
               <a className="btn sm" href="/dashboard#recargar">Recargar saldo</a>
@@ -24,7 +45,7 @@ export default function Home() {
           </div>
           <div className="trust" style={{ marginTop: 10 }}>
             <span className="badge glow">Pago seguro</span>
-            <span className="badge glow">Descuento 30%</span>
+            <span className="badge glow">Descuento {discountPercent}%</span>
             <span className="badge glow">Soporte 24/7</span>
             <span className="badge glow">Técnicos verificados</span>
           </div>
@@ -33,7 +54,7 @@ export default function Home() {
           <div className="stat-grid">
             <div className="stat"><div className="muted">Usuarios</div><div style={{ fontSize: 22, fontWeight: 800 }}>+100</div></div>
             <div className="stat"><div className="muted">Órdenes</div><div style={{ fontSize: 22, fontWeight: 800 }}>+500</div></div>
-            <div className="stat"><div className="muted">Ahorro</div><div style={{ fontSize: 22, fontWeight: 800 }}>30%</div></div>
+            <div className="stat"><div className="muted">Ahorro</div><div style={{ fontSize: 22, fontWeight: 800 }}>{discountPercent}%</div></div>
           </div>
         </div>
       </div>
@@ -69,7 +90,7 @@ export default function Home() {
           </a>
           <a className="card hoverable link" href="/servicios/cambio-notas">
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Cambio de notas</div>
-            <div className="muted">Servicio especial a precio fijo S/ 350.</div>
+            <div className="muted">Servicio especial a precio fijo S/ {fixedCambioNotas}.</div>
           </a>
           <a className="card hoverable link" href="/servicios/pago-luz">
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Pago Luz</div>
