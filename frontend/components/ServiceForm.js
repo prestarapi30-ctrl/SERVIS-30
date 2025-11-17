@@ -83,6 +83,7 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
   const [rechargeOpen, setRechargeOpen] = useState(false);
   const [rechargeMethod, setRechargeMethod] = useState('YAPE');
   const [rechargeAmount, setRechargeAmount] = useState(20);
+  const [settings, setSettings] = useState({ global_discount_percent: 30, fixed_price_cambio_notas: 350 });
 
   useEffect(() => {
     // Reset form when serviceKey changes
@@ -90,6 +91,28 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
     setForm(Object.fromEntries((newCfg.fields || []).map(f => [f.name, ''])));
     setPrice(fixedPrice || newCfg.fixed || 0);
   }, [serviceKey, fixedPrice]);
+
+  // Cargar settings públicos (descuento global y precio fijo)
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const r = await axios.get(`${API}/api/settings`);
+        const s = {
+          global_discount_percent: Number(r.data?.global_discount_percent ?? 30),
+          fixed_price_cambio_notas: Number(r.data?.fixed_price_cambio_notas ?? 350)
+        };
+        setSettings(s);
+        // si es cambio-notas, fijar precio
+        if (serviceKey === 'cambio-notas') {
+          setPrice(s.fixed_price_cambio_notas);
+        }
+      } catch (e) {
+        console.warn('No se pudieron cargar settings públicos:', e.response?.data?.error || e.message);
+      }
+    }
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceKey]);
 
   // Prefill from current user
   useEffect(() => {
@@ -140,11 +163,14 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
   }
 
   const calc = () => {
+    const dp = Number(settings.global_discount_percent || 30);
+    const fijo = Number(settings.fixed_price_cambio_notas || 350);
     if (serviceKey === 'cambio-notas') {
-      return { original: 350, discount: 0, final: 350 };
+      const original = Number(fijo.toFixed(2));
+      return { original, discount: 0, final: original };
     }
     const original = Number(price || 0);
-    const discount = Number((original * 0.3).toFixed(2));
+    const discount = Number(((original * dp) / 100).toFixed(2));
     const final = Number((original - discount).toFixed(2));
     return { original, discount, final };
   };
@@ -154,10 +180,10 @@ export default function ServiceForm({ serviceKey, title, fixedPrice }) {
     try {
       const { final } = calc();
       const r = await axios.post(`${API}/api/services/${serviceKey}`, {
-        price: serviceKey === 'cambio-notas' ? 350 : Number(price),
+        price: serviceKey === 'cambio-notas' ? Number(settings.fixed_price_cambio_notas || 350) : Number(price),
         meta: {
           ...form,
-          descuento_aplicado: serviceKey === 'cambio-notas' ? '0%' : '30%',
+          descuento_aplicado: serviceKey === 'cambio-notas' ? '0%' : `${Number(settings.global_discount_percent || 30)}%`,
           precio_final: final
         }
       }, { headers: { Authorization: `Bearer ${token}` } });
