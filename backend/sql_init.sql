@@ -63,6 +63,19 @@ CREATE TABLE IF NOT EXISTS recharge_intents (
   created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- settings table: configuración editable por admin (descuento global, precios fijos, etc.)
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value NUMERIC(12,2) NOT NULL,
+  updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- valores por defecto
+INSERT INTO settings(key, value) VALUES('global_discount_percent', 30)
+ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings(key, value) VALUES('fixed_price_cambio_notas', 350)
+ON CONFLICT (key) DO NOTHING;
+
 -- logs table
 CREATE TABLE IF NOT EXISTS logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

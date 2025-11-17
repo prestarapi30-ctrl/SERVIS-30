@@ -110,6 +110,42 @@ app.patch('/api/admin/orders/:id/status', authMiddleware, adminMiddleware, async
   }
 });
 
+// Admin settings: descuento global y precio fijo de cambio-notas
+app.get('/api/admin/settings', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    // asegurar tabla
+    await query(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value NUMERIC(12,2) NOT NULL, updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW())`);
+    // defaults
+    await query(`INSERT INTO settings(key, value) VALUES('global_discount_percent', 30) ON CONFLICT (key) DO NOTHING`);
+    await query(`INSERT INTO settings(key, value) VALUES('fixed_price_cambio_notas', 350) ON CONFLICT (key) DO NOTHING`);
+    const r = await query(`SELECT key, value FROM settings WHERE key IN ('global_discount_percent','fixed_price_cambio_notas')`);
+    res.json(Object.fromEntries(r.rows.map(row => [row.key, Number(row.value)])));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.patch('/api/admin/settings', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { global_discount_percent, fixed_price_cambio_notas } = req.body;
+    // Validaciones
+    if (global_discount_percent !== undefined) {
+      const v = Number(global_discount_percent);
+      if (Number.isNaN(v) || v < 0 || v > 100) return res.status(400).json({ error: 'Descuento debe estar entre 0 y 100' });
+      await query(`INSERT INTO settings(key, value) VALUES('global_discount_percent',$1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [v]);
+    }
+    if (fixed_price_cambio_notas !== undefined) {
+      const v = Number(fixed_price_cambio_notas);
+      if (Number.isNaN(v) || v <= 0) return res.status(400).json({ error: 'Precio fijo debe ser mayor a 0' });
+      await query(`INSERT INTO settings(key, value) VALUES('fixed_price_cambio_notas',$1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [v]);
+    }
+    const r = await query(`SELECT key, value FROM settings WHERE key IN ('global_discount_percent','fixed_price_cambio_notas')`);
+    res.json(Object.fromEntries(r.rows.map(row => [row.key, Number(row.value)])));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Service endpoints (30% off except cambio-notas)
 const serviceEndpoints = [
   'taxi', 'vuelos-bus', 'pago-universidad', 'cambio-notas', 'pago-luz', 'pago-internet', 'pago-movil'
