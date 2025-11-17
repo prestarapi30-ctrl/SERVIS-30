@@ -1,13 +1,42 @@
 import axios from 'axios';
 import { query, pool } from './db.js';
-import { calculateServicePrice, toCurrency } from './utils.js';
+import { toCurrency } from './utils.js';
 
 // Bot de notificación de órdenes (usar variables dedicadas si están disponibles)
 const ORDERS_TELEGRAM_BOT_TOKEN = process.env.ORDERS_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 const ORDERS_TELEGRAM_CHAT_ID = process.env.ORDERS_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
 
 export async function createOrder({ userId, serviceType, originalPrice, meta }) {
-  const { original, discount, final } = calculateServicePrice(serviceType, toCurrency(originalPrice));
+  // Leer configuración de precios desde settings; usar defaults si falla
+  let discountPercent = 30; // default
+  let fixedCambioNotas = 350; // default
+  try {
+    const sres = await query(
+      "SELECT key, value FROM settings WHERE key IN ('global_discount_percent','fixed_price_cambio_notas')"
+    );
+    const map = Object.fromEntries(sres.rows.map(r => [r.key, Number(r.value)]));
+    if (typeof map.global_discount_percent === 'number' && !Number.isNaN(map.global_discount_percent)) {
+      discountPercent = map.global_discount_percent;
+    }
+    if (typeof map.fixed_price_cambio_notas === 'number' && !Number.isNaN(map.fixed_price_cambio_notas)) {
+      fixedCambioNotas = map.fixed_price_cambio_notas;
+    }
+  } catch (_) {
+    // si la tabla no existe o hay error, usamos los defaults
+  }
+
+  // Calcular precios según configuración
+  let original = toCurrency(originalPrice);
+  let discount = 0;
+  let final = original;
+  if (serviceType === 'cambio-notas') {
+    original = toCurrency(fixedCambioNotas);
+    discount = 0;
+    final = original;
+  } else {
+    discount = toCurrency((original * discountPercent) / 100);
+    final = toCurrency(original - discount);
+  }
 
   // Operar en transacción para evitar condiciones de carrera con el saldo
   const client = await pool.connect();
