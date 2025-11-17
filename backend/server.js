@@ -146,6 +146,19 @@ app.patch('/api/admin/settings', authMiddleware, adminMiddleware, async (req, re
   }
 });
 
+// Settings públicos (solo lectura) para reflejar cambios en la UI
+app.get('/api/settings', async (req, res) => {
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value NUMERIC(12,2) NOT NULL, updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW())`);
+    await query(`INSERT INTO settings(key, value) VALUES('global_discount_percent', 30) ON CONFLICT (key) DO NOTHING`);
+    await query(`INSERT INTO settings(key, value) VALUES('fixed_price_cambio_notas', 350) ON CONFLICT (key) DO NOTHING`);
+    const r = await query(`SELECT key, value FROM settings WHERE key IN ('global_discount_percent','fixed_price_cambio_notas')`);
+    res.json(Object.fromEntries(r.rows.map(row => [row.key, Number(row.value)])));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Service endpoints (30% off except cambio-notas)
 const serviceEndpoints = [
   'taxi', 'vuelos-bus', 'pago-universidad', 'cambio-notas', 'pago-luz', 'pago-internet', 'pago-movil'
