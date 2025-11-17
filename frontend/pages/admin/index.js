@@ -7,6 +7,8 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [settings, setSettings] = useState({ global_discount_percent: 30, fixed_price_cambio_notas: 350 });
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     const token = localStorage.getItem('admin_token');
@@ -15,6 +17,8 @@ export default function AdminPanel() {
     setUsers(u.data);
     const o = await axios.get(`${API}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } });
     setOrders(o.data);
+    const s = await axios.get(`${API}/api/admin/settings`, { headers: { Authorization: `Bearer ${token}` } });
+    setSettings(s.data);
   }
 
   async function updateStatus(id, status) {
@@ -33,9 +37,45 @@ export default function AdminPanel() {
 
   useEffect(() => { load(); }, []);
 
+  async function saveSettings() {
+    const token = localStorage.getItem('admin_token');
+    setSaving(true);
+    try {
+      const payload = {
+        global_discount_percent: Number(settings.global_discount_percent),
+        fixed_price_cambio_notas: Number(settings.fixed_price_cambio_notas)
+      };
+      const s = await axios.patch(`${API}/api/admin/settings`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      setSettings(s.data);
+      alert('Configuración actualizada');
+    } catch (e) {
+      alert(e.response?.data?.error || e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Shell>
       <div className="row">
+        <div className="col">
+          <div className="panel">
+            <div className="title">Configuración de precios</div>
+            <div className="card" style={{ marginBottom: 10 }}>
+              <label style={{ display: 'block', marginBottom: 6 }}>Porcentaje de descuento global (%)</label>
+              <input type="number" min="0" max="100" value={settings.global_discount_percent}
+                     onChange={e => setSettings({ ...settings, global_discount_percent: e.target.value })} />
+            </div>
+            <div className="card" style={{ marginBottom: 10 }}>
+              <label style={{ display: 'block', marginBottom: 6 }}>Precio fijo de "cambio-notas" (S/)</label>
+              <input type="number" min="1" step="0.01" value={settings.fixed_price_cambio_notas}
+                     onChange={e => setSettings({ ...settings, fixed_price_cambio_notas: e.target.value })} />
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <button className="btn" disabled={saving} onClick={saveSettings}>{saving ? 'Guardando...' : 'Guardar configuración'}</button>
+            </div>
+          </div>
+        </div>
         <div className="col">
           <div className="panel">
             <div className="title">Usuarios <span className="pill">Total: {users.length}</span></div>
