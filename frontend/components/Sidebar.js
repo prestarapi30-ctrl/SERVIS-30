@@ -6,6 +6,7 @@ export default function Sidebar() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     async function load() {
       try {
@@ -19,7 +20,20 @@ export default function Sidebar() {
         setLoading(false);
       }
     }
+    async function checkAdmin() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return setIsAdmin(false);
+        const r = await fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!r.ok) return setIsAdmin(false);
+        const me = await r.json();
+        setIsAdmin(me.role === 'admin');
+      } catch {
+        setIsAdmin(false);
+      }
+    }
     load();
+    checkAdmin();
   }, []);
   const Item = ({ href, children }) => (
     <a
@@ -53,11 +67,16 @@ export default function Sidebar() {
           <Item key={s.key} href={`/servicios/${s.key}`}>{s.name}</Item>
         ))}
       </div>
-      <div className="muted" style={{ margin: '12px 0 8px' }}>Administración</div>
-      <div style={{ display: 'grid', gap: 8 }}>
-        <Item href="/referencias/admin">Referencias (Admin)</Item>
-        <Item href="/admin/servicios">Servicios (Admin)</Item>
-      </div>
+      {isAdmin && (
+        <>
+          <div className="muted" style={{ margin: '12px 0 8px' }}>Administración</div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Item href="/referencias/admin">Referencias (Admin)</Item>
+            <Item href="/admin">Panel (Admin)</Item>
+            <Item href="/admin/servicios">Servicios (Admin)</Item>
+          </div>
+        </>
+      )}
     </aside>
   );
 }
