@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 const API = process.env.NEXT_PUBLIC_API_URL;
 import Sidebar from './Sidebar';
+import ServicesGallery from './ServicesGallery';
 
 export default function Shell({ children }) {
   const [balance, setBalance] = useState(null);
@@ -84,11 +85,23 @@ export default function Shell({ children }) {
           </div>
         </div>
       </nav>
-      <main className="container row">
-        <Sidebar />
-        <div className="col">
-          {children}
-        </div>
+      <main className="container">
+        {isAuthed ? (
+          <div className="row">
+            <Sidebar />
+            <div className="col">
+              {children}
+            </div>
+          </div>
+        ) : (
+          <div className="section">
+            <div className="title" style={{ marginBottom: 10 }}>Servicios disponibles</div>
+            <div className="muted" style={{ marginBottom: 12 }}>
+              Explora el catálogo de servicios. Para generar órdenes necesitas iniciar sesión.
+            </div>
+            <ServicesGallery />
+          </div>
+        )}
       </main>
       <footer className="container" style={{ marginTop: 24 }}>
         <div className="panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>

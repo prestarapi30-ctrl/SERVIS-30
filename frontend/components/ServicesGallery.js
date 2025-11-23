@@ -23,11 +23,21 @@ export default function ServicesGallery() {
         const r = await fetch(`${API}/api/services/public`);
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || 'No se pudo cargar el catálogo');
-        const list = Array.isArray(data) ? data.filter(s => s.active !== false) : [];
-        if (mounted && list.length > 0) {
-          list.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-          setItems(list.map(s => ({ key: s.key, name: s.name })));
-        }
+        const apiList = Array.isArray(data) ? data.filter(s => s.active !== false) : [];
+        const byKey = new Map();
+        // Preferir datos del backend
+        apiList.forEach(s => {
+          const k = String(s.key || '').trim();
+          if (!k) return;
+          byKey.set(k, { key: k, name: s.name || k });
+        });
+        // Completar con fallback si faltan
+        fallback.forEach(f => {
+          if (!byKey.has(f.key)) byKey.set(f.key, { key: f.key, name: f.name });
+        });
+        const merged = Array.from(byKey.values())
+          .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        if (mounted) setItems(merged);
         setError(null);
       } catch (e) {
         setError(e.message);

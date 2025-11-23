@@ -3,7 +3,16 @@ import { useEffect, useState } from 'react';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Sidebar() {
-  const [services, setServices] = useState([]);
+  const fallback = [
+    { key: 'taxi', name: 'Taxi' },
+    { key: 'vuelos-bus', name: 'Vuelos / Bus' },
+    { key: 'pago-universidad', name: 'Pago Universidad' },
+    { key: 'cambio-notas', name: 'Cambio de notas' },
+    { key: 'pago-luz', name: 'Pago Luz' },
+    { key: 'pago-internet', name: 'Pago Internet' },
+    { key: 'pago-movil', name: 'Pago Móvil' },
+  ];
+  const [services, setServices] = useState(fallback);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -13,7 +22,19 @@ export default function Sidebar() {
         const r = await fetch(`${API}/api/services/public`);
         const data = await r.json();
         if (!Array.isArray(data)) throw new Error('Catálogo inválido');
-        setServices((data || []).sort((a, b) => String(a.name).localeCompare(String(b.name))));
+        const apiList = Array.isArray(data) ? data.filter(s => s.active !== false) : [];
+        const byKey = new Map();
+        apiList.forEach(s => {
+          const k = String(s.key || '').trim();
+          if (!k) return;
+          byKey.set(k, { key: k, name: s.name || k });
+        });
+        fallback.forEach(f => {
+          if (!byKey.has(f.key)) byKey.set(f.key, { key: f.key, name: f.name });
+        });
+        const merged = Array.from(byKey.values())
+          .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        setServices(merged);
       } catch (e) {
         setError(e.message);
       } finally {
