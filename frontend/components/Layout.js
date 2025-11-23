@@ -27,6 +27,18 @@ export default function Layout({ children }) {
               <>
                 <a className="link" href="/dashboard" style={{ marginRight: 12 }}>Dashboard</a>
                 <a className="link" href="/perfil" style={{ marginRight: 12 }}>Perfil</a>
+                <button
+                  className="btn secondary sm"
+                  style={{ marginLeft: 4 }}
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem('token');
+                      localStorage.removeItem('user');
+                      localStorage.removeItem('admin_token');
+                    } catch {}
+                    window.location.href = '/login';
+                  }}
+                >Cerrar sesión</button>
               </>
             ) : (
               <>
