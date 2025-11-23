@@ -99,16 +99,70 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
 
 // Admin orders
 app.get('/api/admin/orders', authMiddleware, adminMiddleware, async (req, res) => {
-  const r = await query('SELECT * FROM orders ORDER BY created_at DESC');
-  res.json(r.rows);
+  try {
+    const r = await query(`
+      SELECT o.*, u.name AS user_name, u.email AS user_email, u.phone AS user_phone
+      FROM orders o
+      JOIN users u ON u.id = o.user_id
+      ORDER BY o.created_at DESC
+    `);
+    res.json(r.rows);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 app.patch('/api/admin/orders/:id/status', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { status } = req.body;
     const id = req.params.id;
+    // Obtener orden actual para decidir si corresponde reembolso
+    const cur = await query('SELECT * FROM orders WHERE id=$1', [id]);
+    const order = cur.rows[0];
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    // Actualizar estado
     const r = await query('UPDATE orders SET status=$1 WHERE id=$2 RETURNING *', [status, id]);
-    res.json(r.rows[0]);
+    const updated = r.rows[0];
+    // Si se cancela y no estaba cancelada, reembolsar automáticamente
+    if (status === 'cancelled' && order.status !== 'cancelled') {
+      const userId = order.user_id;
+      const amount = Number(order.final_price);
+      // Operar en transacción: acreditar saldo y registrar transacción
+      await query('BEGIN');
+      try {
+        const ur = await query('SELECT id, balance FROM users WHERE id=$1 FOR UPDATE', [userId]);
+        if (!ur.rows[0]) throw new Error('Usuario no encontrado');
+        const newBalance = Number(ur.rows[0].balance) + amount;
+        await query('UPDATE users SET balance=$1 WHERE id=$2', [newBalance, userId]);
+        await query(
+          `INSERT INTO transactions(user_id, amount, type, source, reference)
+           VALUES($1,$2,'credit','refund',$3)`,
+          [userId, amount, order.service_type]
+        );
+        await query('COMMIT');
+      } catch (e) {
+        await query('ROLLBACK');
+        throw e;
+      }
+    }
+    res.json(updated);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Admin metrics: total recargas hoy y órdenes pendientes
+app.get('/api/admin/metrics', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const rec = await query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM transactions
+       WHERE type='credit' AND DATE(created_at) = CURRENT_DATE`
+    );
+    const pend = await query(
+      `SELECT COUNT(*)::INT AS count FROM orders WHERE status='pending'`
+    );
+    res.json({ recharges_today: Number(rec.rows[0].total), pending_orders: Number(pend.rows[0].count) });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
