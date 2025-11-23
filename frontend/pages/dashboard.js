@@ -47,63 +47,19 @@ export default function Dashboard() {
 
   return (
     <Shell>
-      {/* Encabezado del panel */}
-      <div className="panel" style={{ marginBottom: 16 }}>
-        <div className="title gradient">Dashboard</div>
-        <div className="muted">Resumen de tu cuenta y actividad reciente.</div>
-      </div>
-
-      {/* Widgets principales */}
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-        <div className="kpi">
-          <div className="label">Balance</div>
-          <div className="value">S/ {me?.balance ?? 0}</div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button className="btn sm" onClick={() => setRechargeOpen(true)}>Recargar saldo</button>
-          </div>
+      {/* Hero de bienvenida (sin botones) */}
+      <div className="panel" style={{ marginBottom: 16, padding: 16 }}>
+        <div className="title gradient">Órdenes al instante, sin complicaciones</div>
+        <div className="muted" style={{ marginTop: 6 }}>
+        gestiona tus servicios facil, rapido y seguro.
         </div>
-        <div className="kpi">
-          <div className="label">Token de saldo</div>
-          <div className="pill" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{me?.token_saldo || 'N/A'}</div>
-        </div>
-        <div className="kpi">
-          <div className="label">Órdenes activas</div>
-          <div className="value">{orders.filter(o => o.status === 'pending' || o.status === 'processing').length}</div>
-        </div>
-        <div className="kpi">
-          <div className="label">Completadas</div>
-          <div className="value">{orders.filter(o => o.status === 'completed').length}</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+        <span className="badge glow">🧭 Navegación simple</span>
+        <span className="badge glow">🚀 Procesos optimizados</span>
         </div>
       </div>
 
-      {/* Tabla de órdenes */}
-      <div className="panel">
-        <div className="title" style={{ fontSize: 18 }}>Órdenes</div>
-        {orders.length === 0 ? (
-          <div className="muted">Sin órdenes</div>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Servicio</th>
-                <th>Precio</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id}>
-                  <td><strong>{o.service_type}</strong></td>
-                  <td className="right">S/ {o.final_price}</td>
-                  <td>
-                    <span className={statusClass(o.status)}>{statusMap[o.status] || o.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {/* Contenido detallado del panel se mantiene oculto por ahora */}
       {/* Modal de recarga */}
       <Modal open={rechargeOpen} title="Recargar saldo" onClose={() => setRechargeOpen(false)}>
         <div style={{ marginBottom: 10 }}>
