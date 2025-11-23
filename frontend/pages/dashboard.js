@@ -45,21 +45,50 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
+  // Abrir modal de recarga si se llega con hash #recargar
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#recargar') {
+      setRechargeOpen(true);
+    }
+  }, []);
+
   return (
     <Shell>
-      {/* Hero de bienvenida (sin botones) */}
-      <div className="panel" style={{ marginBottom: 16, padding: 16 }}>
-        <div className="title gradient">Órdenes al instante, sin complicaciones</div>
-        <div className="muted" style={{ marginTop: 6 }}>
-        gestiona tus servicios facil, rapido y seguro.
+      {/* Resumen de cuenta */}
+      {me && (
+        <div className="panel" style={{ marginBottom: 16, padding: 16 }}>
+          <div className="title" style={{ fontSize: 20 }}>Resumen</div>
+          <div className="muted">Saldo disponible: S/ {me.balance}</div>
+          <div className="cta-group" style={{ marginTop: 10 }}>
+            <a
+              className="btn"
+              href="#recargar"
+              onClick={(e) => { e.preventDefault(); setRechargeOpen(true); }}
+            >Recargar saldo</a>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-        <span className="badge glow">🧭 Navegación simple</span>
-        <span className="badge glow">🚀 Procesos optimizados</span>
-        </div>
+      )}
+
+      {/* Órdenes del usuario */}
+      <div className="panel" style={{ padding: 16 }}>
+        <div className="title" style={{ fontSize: 20 }}>Órdenes</div>
+        {orders.length === 0 ? (
+          <div className="muted" style={{ marginTop: 8 }}>No tienes órdenes aún.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+            {orders.map((o) => (
+              <div key={o.id} className="card" style={{ padding: 8 }}>
+                <div><strong>{o.service_type}</strong> — S/ {o.final_price}</div>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  Estado: <span className={statusClass(o.status)}>{statusMap[o.status] || o.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Contenido detallado del panel se mantiene oculto por ahora */}
+      <div id="recargar" />
       {/* Modal de recarga */}
       <Modal open={rechargeOpen} title="Recargar saldo" onClose={() => setRechargeOpen(false)}>
         <div style={{ marginBottom: 10 }}>
