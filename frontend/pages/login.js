@@ -23,15 +23,16 @@ export default function Login() {
   return (
     <Layout>
       <div className="panel" style={{ maxWidth: 460, margin: '0 auto' }}>
-        <div className="title">Ingresar</div>
+        <div className="title gradient">Ingresar</div>
         <form onSubmit={onSubmit}>
           <label className="label">Email</label>
           <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           <label className="label" style={{ marginTop: 10 }}>Password</label>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <div style={{ marginTop: 14 }}>
+          <div className="cta-group" style={{ marginTop: 14 }}>
             <button className="btn" type="submit">Entrar</button>
           </div>
+          <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>Usa credenciales registradas. Tu sesión se cerrará por inactividad.</div>
         </form>
       </div>
     </Layout>

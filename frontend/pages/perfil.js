@@ -28,10 +28,10 @@ export default function Perfil() {
       <div className="row">
         <div className="col">
           <div className="panel">
-            <div className="title">Mi perfil</div>
+            <div className="title gradient">Mi perfil</div>
             {loading && <div className="muted">Cargando...</div>}
             {!loading && (
-              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 8, alignItems: 'center' }}>
+              <div className="info-grid">
                 <div className="muted">ID</div>
                 <div className="pill" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{me?.id}</div>
 

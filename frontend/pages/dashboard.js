@@ -20,6 +20,16 @@ export default function Dashboard() {
     cancelled: 'Cancelada'
   };
 
+  const statusClass = (s) => {
+    switch (s) {
+      case 'pending': return 'chip status-pending';
+      case 'processing': return 'chip status-processing';
+      case 'completed': return 'chip status-completed';
+      case 'cancelled': return 'chip status-cancelled';
+      default: return 'chip';
+    }
+  };
+
   async function load() {
     const token = localStorage.getItem('token');
     if (!token) return (window.location.href = '/login');
@@ -37,31 +47,62 @@ export default function Dashboard() {
 
   return (
     <Shell>
-      <div className="row">
-        <div className="col">
-          <div className="panel">
-            <div className="title">Mi saldo</div>
-            <p>Balance: <strong>S/ {me?.balance ?? 0}</strong></p>
-            <p>Token de saldo: <span className="pill">{me?.token_saldo}</span></p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn" onClick={() => setRechargeOpen(true)}>Recargar saldo</button>
-            </div>
+      {/* Encabezado del panel */}
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="title gradient">Dashboard</div>
+        <div className="muted">Resumen de tu cuenta y actividad reciente.</div>
+      </div>
+
+      {/* Widgets principales */}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <div className="kpi">
+          <div className="label">Balance</div>
+          <div className="value">S/ {me?.balance ?? 0}</div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn sm" onClick={() => setRechargeOpen(true)}>Recargar saldo</button>
           </div>
         </div>
-        <div className="col">
-          <div className="panel">
-            <div className="title">Historial de órdenes</div>
-            <div>
-              {orders.length === 0 && <div className="muted">Sin órdenes</div>}
-              {orders.map(o => (
-                <div className="card" key={o.id} style={{ marginBottom: 10 }}>
-                  <div><strong>{o.service_type}</strong> — S/ {o.final_price}</div>
-                  <div className="muted">Estado: {statusMap[o.status] || o.status}</div>
-                </div>
+        <div className="kpi">
+          <div className="label">Token de saldo</div>
+          <div className="pill" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{me?.token_saldo || 'N/A'}</div>
+        </div>
+        <div className="kpi">
+          <div className="label">Órdenes activas</div>
+          <div className="value">{orders.filter(o => o.status === 'pending' || o.status === 'processing').length}</div>
+        </div>
+        <div className="kpi">
+          <div className="label">Completadas</div>
+          <div className="value">{orders.filter(o => o.status === 'completed').length}</div>
+        </div>
+      </div>
+
+      {/* Tabla de órdenes */}
+      <div className="panel">
+        <div className="title" style={{ fontSize: 18 }}>Órdenes</div>
+        {orders.length === 0 ? (
+          <div className="muted">Sin órdenes</div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Servicio</th>
+                <th>Precio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => (
+                <tr key={o.id}>
+                  <td><strong>{o.service_type}</strong></td>
+                  <td className="right">S/ {o.final_price}</td>
+                  <td>
+                    <span className={statusClass(o.status)}>{statusMap[o.status] || o.status}</span>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
       {/* Modal de recarga */}
       <Modal open={rechargeOpen} title="Recargar saldo" onClose={() => setRechargeOpen(false)}>
