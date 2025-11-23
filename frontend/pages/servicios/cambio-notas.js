@@ -5,7 +5,7 @@ export default function CambioNotas() {
   return (
     <Layout>
       <div className="section">
-        <ServiceForm serviceKey="cambio-notas" title="Cambio de notas" fixedPrice={350} />
+        <ServiceForm serviceKey="cambio-notas" title="Cambio de notas" />
       </div>
     </Layout>
   );
