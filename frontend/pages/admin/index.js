@@ -9,6 +9,8 @@ export default function AdminPanel() {
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState({ global_discount_percent: 30, fixed_price_cambio_notas: 350 });
   const [saving, setSaving] = useState(false);
+  const totalBalance = users.reduce((sum, u) => sum + Number(u.balance || 0), 0);
+  const [metrics, setMetrics] = useState({ recharges_today: 0, pending_orders: 0 });
 
   async function load() {
     const token = localStorage.getItem('admin_token');
@@ -19,6 +21,10 @@ export default function AdminPanel() {
     setOrders(o.data);
     const s = await axios.get(`${API}/api/admin/settings`, { headers: { Authorization: `Bearer ${token}` } });
     setSettings(s.data);
+    try {
+      const m = await axios.get(`${API}/api/admin/metrics`, { headers: { Authorization: `Bearer ${token}` } });
+      setMetrics(m.data);
+    } catch (_) {}
   }
 
   async function updateStatus(id, status) {
@@ -57,6 +63,29 @@ export default function AdminPanel() {
 
   return (
     <Shell>
+      <div className="panel" style={{ marginBottom: 12 }}>
+        <div className="title">Resumen del sistema</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="card" style={{ textAlign: 'center' }}>
+            <div className="muted">Usuarios registrados</div>
+            <div className="title" style={{ fontSize: 22 }}>{users.length}</div>
+          </div>
+          <div className="card" style={{ textAlign: 'center' }}>
+            <div className="muted">Saldo total</div>
+            <div className="title" style={{ fontSize: 22 }}>S/ {Number(totalBalance).toFixed(2)}</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+          <div className="card" style={{ textAlign: 'center' }}>
+            <div className="muted">Monto total de recargas hoy</div>
+            <div className="title" style={{ fontSize: 22 }}>S/ {Number(metrics.recharges_today || 0).toFixed(2)}</div>
+          </div>
+          <div className="card" style={{ textAlign: 'center' }}>
+            <div className="muted">Órdenes pendientes</div>
+            <div className="title" style={{ fontSize: 22 }}>{Number(metrics.pending_orders || orders.filter(o => o.status==='pending').length)}</div>
+          </div>
+        </div>
+      </div>
       <div className="row">
         <div className="col">
           <div className="panel">
@@ -96,6 +125,7 @@ export default function AdminPanel() {
             {orders.map(o => (
               <div className="card" key={o.id} style={{ marginBottom: 10 }}>
                 <div><strong>{o.service_type}</strong> — S/ {o.final_price}</div>
+                <div className="muted">Solicitado por: {o.user_name} — {o.user_email}{o.user_phone ? ` — Tel: ${o.user_phone}` : ''}</div>
                 <div className="muted">Estado: {o.status}</div>
                 <div style={{ marginTop: 8 }}>
                   {['pending','processing','completed','cancelled'].map(s => (
