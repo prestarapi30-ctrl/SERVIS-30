@@ -20,14 +20,14 @@ export default function ReferenciasAdmin() {
       try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No autenticado');
-        const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/users/me`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/users/me`;
         const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error('Autenticación inválida');
         const me = await res.json();
         if (me.role !== 'admin') throw new Error('No autorizado');
         setAllowed(true);
         // cargar listado admin
-        const listUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/admin/referencias`;
+        const listUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/referencias`;
         const lr = await fetch(listUrl, { headers: { Authorization: `Bearer ${token}` } });
         const data = await lr.json();
         setItems(Array.isArray(data) ? data : []);
@@ -55,7 +55,7 @@ export default function ReferenciasAdmin() {
       });
       reader.readAsDataURL(file);
       const base64 = await asPromise;
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/admin/referencias`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/referencias`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -73,7 +73,7 @@ export default function ReferenciasAdmin() {
       // actualizar lista
       try {
         const token = localStorage.getItem('token');
-        const listUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/admin/referencias`;
+        const listUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/referencias`;
         const lr = await fetch(listUrl, { headers: { Authorization: `Bearer ${token}` } });
         const data = await lr.json();
         setItems(Array.isArray(data) ? data : []);
@@ -89,7 +89,7 @@ export default function ReferenciasAdmin() {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No autenticado');
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/admin/referencias/${id}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/referencias/${id}`;
       const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al borrar');
@@ -121,7 +121,7 @@ export default function ReferenciasAdmin() {
         reader.readAsDataURL(editFile);
         image_base64 = await prom;
       }
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/admin/referencias/${editId}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/referencias/${editId}`;
       const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

@@ -7,7 +7,7 @@ export default function Capturas() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/referencias`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/referencias`;
     fetch(url)
       .then(async (res) => {
         if (!res.ok) throw new Error('No se pudieron cargar las capturas');
