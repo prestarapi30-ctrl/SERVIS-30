@@ -1,13 +1,32 @@
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Layout({ children }) {
   const [isAuthed, setIsAuthed] = useState(false);
+  const [balance, setBalance] = useState(null);
   useEffect(() => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       setIsAuthed(!!token);
     } catch {}
   }, []);
+
+  useEffect(() => {
+    async function fetchBalance() {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) return setBalance(null);
+        const r = await axios.get(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+        const b = Number(r.data?.balance ?? 0);
+        setBalance(isNaN(b) ? null : b);
+      } catch {
+        setBalance(null);
+      }
+    }
+    fetchBalance();
+  }, [isAuthed]);
 
   return (
     <div>
@@ -25,6 +44,9 @@ export default function Layout({ children }) {
             <a className="pill link" href="https://www.tiktok.com/@servis30p?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" style={{ marginRight: 12 }}>TikTok</a>
             {isAuthed ? (
               <>
+                {balance !== null && (
+                  <span className="pill glow" style={{ marginRight: 12 }} title="Saldo disponible">Saldo: S/ {balance}</span>
+                )}
                 <button
                   className="btn secondary sm"
                   style={{ marginLeft: 4 }}

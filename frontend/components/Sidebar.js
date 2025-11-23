@@ -1,6 +1,10 @@
 export default function Sidebar() {
   const Item = ({ href, children }) => (
-    <a className="item" href={href}>
+    <a
+      className="item card hoverable"
+      href={href}
+      style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+    >
       {children}
     </a>
   );
@@ -17,19 +21,24 @@ export default function Sidebar() {
     }
   };
   return (
-    <aside className="panel sidebar">
+    <aside className="panel sidebar" style={{ minWidth: 240 }}>
       <div className="title" style={{ marginBottom: 10 }}>Panel</div>
       <div className="muted" style={{ margin: '6px 0 8px' }}>Servicios</div>
-      <Item href="/servicios/taxi">Taxi</Item>
-      <Item href="/servicios/vuelos-bus">Vuelos y bus</Item>
-      <Item href="/servicios/pago-universidad">Pago de universidad</Item>
-      <Item href="/servicios/cambio-notas">Cambio de notas</Item>
-      <Item href="/servicios/pago-luz">Pago de luz</Item>
-      <Item href="/servicios/pago-internet">Pago de internet</Item>
-      <Item href="/servicios/pago-movil">Pago de móvil</Item>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {/* Orden alfabético */}
+        <Item href="/servicios/cambio-notas">Cambio de notas</Item>
+        <Item href="/servicios/pago-internet">Pago de internet</Item>
+        <Item href="/servicios/pago-luz">Pago de luz</Item>
+        <Item href="/servicios/pago-movil">Pago de móvil</Item>
+        <Item href="/servicios/pago-universidad">Pago de universidad</Item>
+        <Item href="/servicios/taxi">Taxi</Item>
+        <Item href="/servicios/vuelos-bus">Vuelos y bus</Item>
+      </div>
       <div className="muted" style={{ margin: '12px 0 8px' }}>Administración</div>
-      <Item href="/referencias/admin">Referencias (Admin)</Item>
-      <Item href="/admin/servicios">Servicios (Admin)</Item>
+      <div style={{ display: 'grid', gap: 8 }}>
+        <Item href="/referencias/admin">Referencias (Admin)</Item>
+        <Item href="/admin/servicios">Servicios (Admin)</Item>
+      </div>
     </aside>
   );
 }
