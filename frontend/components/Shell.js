@@ -31,7 +31,12 @@ export default function Shell({ children }) {
             <strong style={{ fontSize: 18 }}>SERVIS-30</strong>
             <span className="pill">Panel</span>
           </div>
-          <div className="auth-box">
+          <div className="auth-box" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Enlaces públicos rápidos */}
+            <a className="link" href="/" title="Inicio" style={{ marginRight: 8 }}>Inicio</a>
+            <a className="link" href="/servicios" title="Servicios" style={{ marginRight: 8 }}>Servicios</a>
+            <a className="link" href="/referencias" title="Referencias" style={{ marginRight: 8 }}>Referencias</a>
+            <a className="pill link" href="https://www.tiktok.com/@servis30p?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" title="TikTok" style={{ marginRight: 8 }}>TikTok</a>
             <a className="link" href="/dashboard">Dashboard</a>
             <a className="link" href="/perfil">Perfil</a>
             <a className="btn ghost sm" href="/dashboard#recargar">Recargar saldo</a>

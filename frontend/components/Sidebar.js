@@ -19,6 +19,11 @@ export default function Sidebar() {
   return (
     <aside className="panel sidebar">
       <div className="title" style={{ marginBottom: 10 }}>Panel</div>
+      <div className="muted" style={{ margin: '6px 0 8px' }}>Navegación pública</div>
+      <Item href="/">Inicio</Item>
+      <Item href="/servicios">Servicios</Item>
+      <Item href="/referencias">Referencias</Item>
+      <a className="item" href="https://www.tiktok.com/@servis30p?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer">TikTok</a>
       <div className="muted" style={{ margin: '6px 0 8px' }}>Principal</div>
       <Item href="/dashboard"><Icon name="dash" /> Dashboard</Item>
       <Item href="/perfil"><Icon name="user" /> Perfil</Item>
