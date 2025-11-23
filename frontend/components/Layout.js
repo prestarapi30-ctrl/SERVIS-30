@@ -20,13 +20,11 @@ export default function Layout({ children }) {
           </div>
           <div className="cta-group" style={{ alignItems: 'center' }}>
             <a className="link" href="/" style={{ marginRight: 12 }}>Inicio</a>
-            <a className="link" href="/servicios" style={{ marginRight: 12 }}>Servicios</a>
+            <a className="link" href={isAuthed ? '/dashboard' : '/servicios'} style={{ marginRight: 12 }}>Servicios</a>
             <a className="link" href="/referencias" style={{ marginRight: 12 }}>Referencias</a>
             <a className="pill link" href="https://www.tiktok.com/@servis30p?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" style={{ marginRight: 12 }}>TikTok</a>
             {isAuthed ? (
               <>
-                <a className="link" href="/dashboard" style={{ marginRight: 12 }}>Dashboard</a>
-                <a className="link" href="/perfil" style={{ marginRight: 12 }}>Perfil</a>
                 <button
                   className="btn secondary sm"
                   style={{ marginLeft: 4 }}

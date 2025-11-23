@@ -19,14 +19,14 @@ export default function Sidebar() {
   return (
     <aside className="panel sidebar">
       <div className="title" style={{ marginBottom: 10 }}>Panel</div>
-      <div className="muted" style={{ margin: '6px 0 8px' }}>Navegación pública</div>
-      <Item href="/">Inicio</Item>
-      <Item href="/servicios">Servicios</Item>
-      <Item href="/referencias">Referencias</Item>
-      <a className="item" href="https://www.tiktok.com/@servis30p?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer">TikTok</a>
-      <div className="muted" style={{ margin: '6px 0 8px' }}>Principal</div>
-      <Item href="/dashboard"><Icon name="dash" /> Dashboard</Item>
-      <Item href="/perfil"><Icon name="user" /> Perfil</Item>
+      <div className="muted" style={{ margin: '6px 0 8px' }}>Servicios</div>
+      <Item href="/servicios/taxi">Taxi</Item>
+      <Item href="/servicios/vuelos-bus">Vuelos y bus</Item>
+      <Item href="/servicios/pago-universidad">Pago de universidad</Item>
+      <Item href="/servicios/cambio-notas">Cambio de notas</Item>
+      <Item href="/servicios/pago-luz">Pago de luz</Item>
+      <Item href="/servicios/pago-internet">Pago de internet</Item>
+      <Item href="/servicios/pago-movil">Pago de móvil</Item>
       <div className="muted" style={{ margin: '12px 0 8px' }}>Administración</div>
       <Item href="/referencias/admin">Referencias (Admin)</Item>
       <Item href="/admin/servicios">Servicios (Admin)</Item>
