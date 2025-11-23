@@ -45,11 +45,17 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
-  // Abrir modal de recarga si se llega con hash #recargar
+  // Abrir modal de recarga si se llega con hash #recargar,
+  // y también cuando cambia el hash estando en la misma página
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#recargar') {
-      setRechargeOpen(true);
-    }
+    const openIfHash = () => {
+      if (typeof window !== 'undefined' && window.location.hash === '#recargar') {
+        setRechargeOpen(true);
+      }
+    };
+    openIfHash();
+    window.addEventListener('hashchange', openIfHash);
+    return () => window.removeEventListener('hashchange', openIfHash);
   }, []);
 
   return (
