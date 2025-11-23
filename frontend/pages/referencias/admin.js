@@ -176,7 +176,9 @@ export default function ReferenciasAdmin() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, marginTop: 12 }}>
               {items.map((item) => (
                 <div key={item.id} className="panel" style={{ padding: 12 }}>
-                  <img src={item.image_url} alt={item.title || 'Captura'} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }} />
+                  <img src={(item.image_url && item.image_url.startsWith('http')) ? item.image_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${item.image_url?.startsWith('/') ? '' : '/'}${item.image_url || ''}`}
+                       alt={item.title || 'Captura'}
+                       style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }} />
                   {editId === item.id ? (
                     <form onSubmit={saveEdit} style={{ marginTop: 8, display: 'grid', gap: 8 }}>
                       <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Título" />

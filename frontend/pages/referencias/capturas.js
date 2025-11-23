@@ -5,6 +5,7 @@ export default function Capturas() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   useEffect(() => {
     const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/referencias`;
@@ -36,7 +37,7 @@ export default function Capturas() {
               <div key={item.id} className="panel" style={{ padding: 12 }}>
                 <div style={{ aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: 8, marginBottom: 8, background: '#f4f4f4' }}>
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.title || 'Captura'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.image_url.startsWith('http') ? item.image_url : `${apiBase}${item.image_url.startsWith('/') ? '' : '/'}${item.image_url}`} alt={item.title || 'Captura'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div className="muted" style={{ padding: 16 }}>Sin imagen</div>
                   )}
