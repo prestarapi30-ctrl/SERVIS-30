@@ -493,7 +493,7 @@ app.get('/api/referencias', async (req, res) => {
       created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
     )`);
     const r = await query('SELECT id, title, description, image_path FROM referencias ORDER BY created_at DESC');
-    const base = process.env.BACKEND_URL || '';
+    const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
     const items = r.rows.map(row => ({
       id: row.id,
       title: row.title,
@@ -510,7 +510,7 @@ app.get('/api/referencias', async (req, res) => {
 app.get('/api/admin/referencias', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const r = await query('SELECT id, title, description, image_path, created_at FROM referencias ORDER BY created_at DESC');
-    const base = process.env.BACKEND_URL || '';
+    const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
     const items = r.rows.map(row => ({
       id: row.id,
       title: row.title,
@@ -557,7 +557,7 @@ app.post('/api/admin/referencias', authMiddleware, adminMiddleware, async (req, 
       fs.writeFileSync(filePath, buf);
       await client.query('UPDATE referencias SET image_path=$1 WHERE id=$2', [fileName, id]);
       await client.query('COMMIT');
-      const base = process.env.BACKEND_URL || '';
+      const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
       res.json({ id, image_url: `${base}/static/referencias/${fileName}` });
     } catch (e) {
       try { await client.query('ROLLBACK'); } catch (_) {}
@@ -606,7 +606,7 @@ app.patch('/api/admin/referencias/:id', authMiddleware, adminMiddleware, async (
       }
       await client.query('UPDATE referencias SET title=$1, description=$2, image_path=$3 WHERE id=$4', [title || prev.title, description || prev.description, imagePath, id]);
       await client.query('COMMIT');
-      const base = process.env.BACKEND_URL || '';
+      const base = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
       res.json({ id, title: title || prev.title, description: description || prev.description, image_url: `${base}/static/referencias/${imagePath}` });
     } catch (e) {
       try { await client.query('ROLLBACK'); } catch (_) {}
