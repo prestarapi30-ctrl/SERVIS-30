@@ -63,6 +63,8 @@ body {
 .sidebar { width: 240px; flex: 0 0 240px; }
 .sidebar .item { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; color: var(--text); text-decoration: none; border: 1px solid transparent; }
 .sidebar .item:hover { border-color: var(--border); background: #f3f4f6; }
+/* Mostrar títulos de servicios de corrido en una línea */
+.sidebar .item { white-space: nowrap; overflow: visible; text-overflow: clip; }
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(17,24,39,.28); display: flex; align-items: center; justify-content: center; }
 .modal { background: var(--panel); border-radius: 16px; padding: 20px; width: 420px; max-width: 90%; border: 1px solid var(--border); box-shadow: 0 12px 36px rgba(17,24,39,.08); }
